@@ -28,6 +28,7 @@ public class Mover : MonoBehaviour
         _horizontalTurnSensivity = 7;                                         // Camera + вращает персонажа
         _verticalTurnSensivity = 10;                                          // Camera
         _verticalVelocity = Vector3.down;
+
         _gravityFactor = 2;                // Работает только когда персонаж в прыжке, чтобы быстрее приземлятся.
         _jumpSpeed = 10;
         //_animator.SetBool("IsRunning", true);
