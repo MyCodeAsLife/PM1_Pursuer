@@ -1,85 +1,72 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerInputController
+public static class PlayerInputController
 {
-    private PlayerInputActions _inputActions;
-    private Vector2 _lookDirection;
-    private Vector2 _moveDirection;
-    [SerializeField] private float _lookSpeed;
-    [SerializeField] private float _moveSpeed;
-    private Transform transform;
+    private static PlayerInputActions _inputActions;
+    private static List<Action<InputAction.CallbackContext>> _subscribeFunctions = new();
 
-    public Action<Vector2> MovePerformed;
-    public Action<Vector2> LookPerformed;
-
-    public PlayerInputController()
+    static PlayerInputController()
     {
         _inputActions = new PlayerInputActions();
-        _inputActions.Enable();                         // Или Активировать/дезактивировать из-вне??
-
-        _inputActions.BaseControl.Move.performed += OnMove;
-        _inputActions.BaseControl.Look.performed += OnLook;
+        _inputActions.Enable();
     }
 
-    ~PlayerInputController()
+    public static void SubscribeOnMoveStart(Action<InputAction.CallbackContext> func)
     {
-        _inputActions.BaseControl.Move.performed -= OnMove;
-        _inputActions.BaseControl.Look.performed -= OnLook;
-
-        _inputActions.Disable();
+        if (_subscribeFunctions.Contains(func) == false)
+        {
+            _subscribeFunctions.Add(func);
+            _inputActions.BaseControl.Move.started += func;
+        }
     }
 
-    //private void OnEnable()
-    //{
-    //    _inputActions = new PlayerInputActions();
-    //    _inputActions.Enable();
-
-    //    _inputActions.BaseControl.Move.performed += OnMove;
-    //    _inputActions.BaseControl.Look.performed += OnLook;
-    //}
-
-    //private void OnDisable()
-    //{
-    //    _inputActions.BaseControl.Move.performed -= OnMove;
-    //    _inputActions.BaseControl.Look.performed -= OnLook;
-
-    //    _inputActions.Disable();
-    //}
-
-    //private void Update()
-    //{
-    //    _lookDirection = _inputActions.BaseControl.Look.ReadValue<Vector2>();
-    //    _moveDirection = _inputActions.BaseControl.Move.ReadValue<Vector2>();
-
-    //    Look();
-    //    Move();
-    //}
-
-    void Look()
+    public static void SubscribeOnMovePerformed(Action<InputAction.CallbackContext> func)
     {
-        float scaleLookSpeed = _lookSpeed * Time.deltaTime;
-        Vector3 offset = new Vector3(-_lookDirection.y, _lookDirection.x, 0f) * scaleLookSpeed;
-
-        transform.Rotate(offset * scaleLookSpeed);
+        if (_subscribeFunctions.Contains(func) == false)
+        {
+            _subscribeFunctions.Add(func);
+            _inputActions.BaseControl.Move.performed += func;
+        }
     }
 
-    void Move()
+    public static void SubscribeOnMoveCanceled(Action<InputAction.CallbackContext> func)
     {
-        float scaledMoveSpeed = _moveSpeed * Time.deltaTime;
-        Vector3 offset = new Vector3(_moveDirection.x, 0f, _moveDirection.y) * scaledMoveSpeed;
-
-        transform.Translate(offset * scaledMoveSpeed);
+        if (_subscribeFunctions.Contains(func) == false)
+        {
+            _subscribeFunctions.Add(func);
+            _inputActions.BaseControl.Move.canceled += func;
+        }
     }
 
-    void OnLook(InputAction.CallbackContext context)
+    public static void UnSubscribeOnMoveStart(Action<InputAction.CallbackContext> func)
     {
-        _lookDirection = context.action.ReadValue<Vector2>();
+        if (_subscribeFunctions.Contains(func) == false)
+        {
+            _subscribeFunctions.Add(func);
+            _inputActions.BaseControl.Move.started -= func;
+        }
     }
 
-    void OnMove(InputAction.CallbackContext context)
+    public static void UnSubscribeOnMovePerformed(Action<InputAction.CallbackContext> func)
     {
-        _moveDirection = context.action.ReadValue<Vector2>();
+        if (_subscribeFunctions.Contains(func))
+        {
+            _subscribeFunctions.Remove(func);
+            _inputActions.BaseControl.Move.performed -= func;
+        }
     }
+
+    public static void UnSubscribeOnMoveCanceled(Action<InputAction.CallbackContext> func)
+    {
+        if (_subscribeFunctions.Contains(func) == false)
+        {
+            _subscribeFunctions.Add(func);
+            _inputActions.BaseControl.Move.canceled -= func;
+        }
+    }
+
+    public static Vector2 GetMovementVector() => _inputActions.BaseControl.Move.ReadValue<Vector2>();
 }

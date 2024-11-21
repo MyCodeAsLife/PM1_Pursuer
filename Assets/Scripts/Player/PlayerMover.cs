@@ -1,68 +1,72 @@
+using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class Mover : MonoBehaviour
+public class PlayerMover
 {
-    [SerializeField] private Transform _cameraTransform;
-    // Camera
-    private float _cameraAngle;
-    private float _verticalMinAngle;
-    private float _verticalMaxAngle;
-    private float _horizontalTurnSensivity;
-    private float _verticalTurnSensivity;
-    // Movement
-    [SerializeField] private Animator _animator;
-    private float _gravityFactor;
-    private float _jumpSpeed;
-    private float _speed;
-    private float _strafeSpeed;
-
     private CharacterController _controller;
-    private Vector3 _verticalVelocity;
+    private Transform _transform;
+    private Vector2 _moveDirection;
+    private float _rotateSpeed;
+    private float _moveSpeed;
 
-    private void Awake()
+    public event Action MoveStarted;
+    public event Action MoveCanceled;
+    private event Action Moved;
+
+    public PlayerMover(CharacterController controller, Transform transform)
     {
-        _controller = GetComponent<CharacterController>();
-        _cameraAngle = _cameraTransform.localEulerAngles.x;                   // Camera
-        _verticalMinAngle = -89;                                              // Camera
-        _verticalMaxAngle = 89;                                               // Camera
-        _horizontalTurnSensivity = 7;                                         // Camera + вращает персонажа
-        _verticalTurnSensivity = 10;                                          // Camera
-        _verticalVelocity = Vector3.down;
+        _controller = controller;
+        _transform = transform;
+        _rotateSpeed = 0.05f;
+        _moveSpeed = 5f;
 
-        _gravityFactor = 2;                // Работает только когда персонаж в прыжке, чтобы быстрее приземлятся.
-        _jumpSpeed = 10;
-        //_animator.SetBool("IsRunning", true);
+        PlayerInputController.SubscribeOnMoveStart(OnMoveStart);
+        PlayerInputController.SubscribeOnMovePerformed(OnMove);
+        PlayerInputController.SubscribeOnMoveCanceled(OnMoveCanceled);
     }
 
-    private void Update()
+    ~PlayerMover()
     {
-        // Camera
-        Vector3 forward = Vector3.ProjectOnPlane(_cameraTransform.forward, Vector3.up).normalized;      // Camera
-        Vector3 right = Vector3.ProjectOnPlane(_cameraTransform.right, Vector3.up).normalized;          // Camera
-        _cameraAngle -= Input.GetAxis("Mouse Y") * _verticalTurnSensivity;                              // Camera
-        _cameraAngle = Mathf.Clamp(_cameraAngle, _verticalMinAngle, _verticalMaxAngle);                 // Camera
-        _cameraTransform.localEulerAngles = Vector3.right * _cameraAngle;                               // Camera
+        PlayerInputController.UnSubscribeOnMoveStart(OnMoveStart);
+        PlayerInputController.UnSubscribeOnMovePerformed(OnMove);
+        PlayerInputController.UnSubscribeOnMoveCanceled(OnMoveCanceled);
+    }
 
-        transform.Rotate(Vector3.up * _horizontalTurnSensivity * Input.GetAxis("Mouse X"));             // Camera + вращает персонажа (если выделенно в отдельный компонент то вращать родителя)
+    public void Tick()
+    {
+        Moved?.Invoke();
+    }
 
-        // Movement
-        Vector3 movement = forward * Input.GetAxis("Vertical") * _speed + right * Input.GetAxis("Horizontal") * _strafeSpeed;
+    private void Move()
+    {
+        float scaledMoveSpeed = _moveSpeed * Time.deltaTime;
+        _controller.Move(_transform.forward * scaledMoveSpeed);
+    }
 
-        if (_controller.isGrounded)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-                _verticalVelocity = Vector3.up * _jumpSpeed;
-            else
-                _verticalVelocity = Vector3.down;
+    private void Rotate()
+    {
+        Vector3 direction = new Vector3(-_moveDirection.x, 0f, -_moveDirection.y);
+        Quaternion rotation = Quaternion.LookRotation(direction * Time.deltaTime);
+        _transform.rotation = Quaternion.Lerp(_transform.rotation, rotation, _rotateSpeed);
+    }
 
-            _controller.Move((movement + _verticalVelocity) * Time.deltaTime);
-        }
-        else                                            // Если объект в воздухе
-        {
-            Vector3 horizontalVelocity = _controller.velocity;
-            horizontalVelocity.y = 0;
-            _verticalVelocity += Physics.gravity * Time.deltaTime * _gravityFactor;
-            _controller.Move((horizontalVelocity + _verticalVelocity) * Time.deltaTime);
-        }
+    private void OnMoveStart(InputAction.CallbackContext context)
+    {
+        MoveStarted?.Invoke();
+        Moved += Move;
+        Moved += Rotate;
+    }
+
+    private void OnMove(InputAction.CallbackContext context)
+    {
+        _moveDirection = context.action.ReadValue<Vector2>();
+    }
+
+    private void OnMoveCanceled(InputAction.CallbackContext context)
+    {
+        MoveCanceled?.Invoke();
+        Moved -= Move;
+        Moved += Rotate;
     }
 }
