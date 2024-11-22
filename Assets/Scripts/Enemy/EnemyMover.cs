@@ -27,22 +27,24 @@ public class EnemyMover
 
     public void Tick()
     {
-        Following();
+        Moving();
     }
 
-    public void Move()
+    private void Move()
     {
         _rig.MovePosition(Vector3.MoveTowards(_transform.position, _target.position, _moveSpeed * Time.deltaTime));
     }
 
-    public void Rotate()
+    private void Rotate()
     {
         Vector3 direction = (_target.position - _transform.position).normalized;
         Quaternion rotation = Quaternion.LookRotation(direction * Time.deltaTime);
+        rotation.x = 0;
+        rotation.z = 0;
         _transform.rotation = Quaternion.Lerp(_transform.rotation, rotation, _rotateSpeed);
     }
 
-    private void Following()
+    private void Moving()
     {
         float distance = Vector3.Distance(_transform.position, _target.position);
 

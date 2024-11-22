@@ -36,12 +36,22 @@ public class PlayerMover
     public void Tick()
     {
         Moved?.Invoke();
+        Falling();
+    }
+
+    public void OnColliderHit(ControllerColliderHit hit)
+    {
+        if (hit.rigidbody != null)
+            hit.rigidbody.velocity = _controller.velocity;
     }
 
     private void Move()
     {
-        float scaledMoveSpeed = _moveSpeed * Time.deltaTime;
-        _controller.Move(_transform.forward * scaledMoveSpeed);
+        Vector3 playerSpeed = new Vector3(-_moveDirection.x, 0f, -_moveDirection.y);
+        playerSpeed *= Time.deltaTime * _moveSpeed;
+
+        if (_controller.isGrounded)
+            _controller.Move(playerSpeed);
     }
 
     private void Rotate()
@@ -68,5 +78,10 @@ public class PlayerMover
         MoveCanceled?.Invoke();
         Moved -= Move;
         Moved += Rotate;
+    }
+
+    private void Falling()
+    {
+        _controller.Move(Physics.gravity * Time.deltaTime);
     }
 }

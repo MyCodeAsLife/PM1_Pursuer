@@ -32,6 +32,11 @@ public class Player : MonoBehaviour
         _mover.Tick();
     }
 
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        _mover.OnColliderHit(hit);
+    }
+
     private void OnStartRunning()
     {
         if (_animationController.IsRunning == false)
