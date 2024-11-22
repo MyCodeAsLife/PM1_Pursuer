@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public static class PlayerInputController
+public class PlayerInputController
 {
-    private static PlayerInputActions _inputActions;
-    private static List<Action<InputAction.CallbackContext>> _subscribeFunctions = new();
+    private PlayerInputActions _inputActions;
+    private List<Action<InputAction.CallbackContext>> _subscribeFunctions = new();
 
-    static PlayerInputController()
+    public PlayerInputController()
     {
         _inputActions = new PlayerInputActions();
         _inputActions.Enable();
     }
 
-    public static void SubscribeOnMoveStart(Action<InputAction.CallbackContext> func)
+    public void SubscribeOnMoveStart(Action<InputAction.CallbackContext> func)
     {
         if (_subscribeFunctions.Contains(func) == false)
         {
@@ -23,7 +23,7 @@ public static class PlayerInputController
         }
     }
 
-    public static void SubscribeOnMovePerformed(Action<InputAction.CallbackContext> func)
+    public void SubscribeOnMovePerformed(Action<InputAction.CallbackContext> func)
     {
         if (_subscribeFunctions.Contains(func) == false)
         {
@@ -32,7 +32,7 @@ public static class PlayerInputController
         }
     }
 
-    public static void SubscribeOnMoveCanceled(Action<InputAction.CallbackContext> func)
+    public void SubscribeOnMoveCanceled(Action<InputAction.CallbackContext> func)
     {
         if (_subscribeFunctions.Contains(func) == false)
         {
@@ -41,7 +41,7 @@ public static class PlayerInputController
         }
     }
 
-    public static void UnSubscribeOnMoveStart(Action<InputAction.CallbackContext> func)
+    public void UnSubscribeOnMoveStart(Action<InputAction.CallbackContext> func)
     {
         if (_subscribeFunctions.Contains(func) == false)
         {
@@ -50,7 +50,7 @@ public static class PlayerInputController
         }
     }
 
-    public static void UnSubscribeOnMovePerformed(Action<InputAction.CallbackContext> func)
+    public void UnSubscribeOnMovePerformed(Action<InputAction.CallbackContext> func)
     {
         if (_subscribeFunctions.Contains(func))
         {
@@ -59,7 +59,7 @@ public static class PlayerInputController
         }
     }
 
-    public static void UnSubscribeOnMoveCanceled(Action<InputAction.CallbackContext> func)
+    public void UnSubscribeOnMoveCanceled(Action<InputAction.CallbackContext> func)
     {
         if (_subscribeFunctions.Contains(func) == false)
         {
@@ -68,5 +68,5 @@ public static class PlayerInputController
         }
     }
 
-    public static Vector2 GetMovementVector() => _inputActions.BaseControl.Move.ReadValue<Vector2>();
+    public Vector2 GetMovementVector() => _inputActions.BaseControl.Move.ReadValue<Vector2>();
 }

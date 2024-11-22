@@ -20,17 +20,6 @@ public class PlayerMover
         _transform = transform;
         _rotateSpeed = 0.05f;
         _moveSpeed = 5f;
-
-        PlayerInputController.SubscribeOnMoveStart(OnMoveStart);
-        PlayerInputController.SubscribeOnMovePerformed(OnMove);
-        PlayerInputController.SubscribeOnMoveCanceled(OnMoveCanceled);
-    }
-
-    ~PlayerMover()
-    {
-        PlayerInputController.UnSubscribeOnMoveStart(OnMoveStart);
-        PlayerInputController.UnSubscribeOnMovePerformed(OnMove);
-        PlayerInputController.UnSubscribeOnMoveCanceled(OnMoveCanceled);
     }
 
     public void Tick()
@@ -39,10 +28,29 @@ public class PlayerMover
         Falling();
     }
 
-    public void OnColliderHit(ControllerColliderHit hit)
+    public void ColliderHit(ControllerColliderHit hit)
     {
         if (hit.rigidbody != null)
             hit.rigidbody.velocity = _controller.velocity;
+    }
+
+    public void OnMoveStart(InputAction.CallbackContext context)
+    {
+        MoveStarted?.Invoke();
+        Moved += Move;
+        Moved += Rotate;
+    }
+
+    public void OnMove(InputAction.CallbackContext context)
+    {
+        _moveDirection = context.action.ReadValue<Vector2>();
+    }
+
+    public void OnMoveCanceled(InputAction.CallbackContext context)
+    {
+        MoveCanceled?.Invoke();
+        Moved -= Move;
+        Moved += Rotate;
     }
 
     private void Move()
@@ -59,25 +67,6 @@ public class PlayerMover
         Vector3 direction = new Vector3(-_moveDirection.x, 0f, -_moveDirection.y);
         Quaternion rotation = Quaternion.LookRotation(direction * Time.deltaTime);
         _transform.rotation = Quaternion.Lerp(_transform.rotation, rotation, _rotateSpeed);
-    }
-
-    private void OnMoveStart(InputAction.CallbackContext context)
-    {
-        MoveStarted?.Invoke();
-        Moved += Move;
-        Moved += Rotate;
-    }
-
-    private void OnMove(InputAction.CallbackContext context)
-    {
-        _moveDirection = context.action.ReadValue<Vector2>();
-    }
-
-    private void OnMoveCanceled(InputAction.CallbackContext context)
-    {
-        MoveCanceled?.Invoke();
-        Moved -= Move;
-        Moved += Rotate;
     }
 
     private void Falling()

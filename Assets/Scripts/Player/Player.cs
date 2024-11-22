@@ -3,28 +3,39 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour
 {
-    private PlayerMover _mover;
+    [SerializeField] private Animator _animator;
+
+    private PlayerInputController _playerInputController;
     private AnimationController _animationController;
+    private PlayerMover _mover;
 
     private void Awake()
     {
         var controller = GetComponent<CharacterController>();
-        var animator = GetComponentInChildren<Animator>();
 
+        _playerInputController = new PlayerInputController();
+        _animationController = new AnimationController(_animator);
         _mover = new PlayerMover(controller, transform);
-        _animationController = new AnimationController(animator);
     }
 
     private void OnEnable()
     {
         _mover.MoveStarted += OnStartRunning;
         _mover.MoveCanceled += OnCancelRunning;
+
+        _playerInputController.SubscribeOnMoveStart(_mover.OnMoveStart);
+        _playerInputController.SubscribeOnMovePerformed(_mover.OnMove);
+        _playerInputController.SubscribeOnMoveCanceled(_mover.OnMoveCanceled);
     }
 
     private void OnDisable()
     {
         _mover.MoveStarted -= OnStartRunning;
         _mover.MoveCanceled -= OnCancelRunning;
+
+        _playerInputController.UnSubscribeOnMoveStart(_mover.OnMoveStart);
+        _playerInputController.UnSubscribeOnMovePerformed(_mover.OnMove);
+        _playerInputController.UnSubscribeOnMoveCanceled(_mover.OnMoveCanceled);
     }
 
     private void Update()
@@ -34,7 +45,7 @@ public class Player : MonoBehaviour
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        _mover.OnColliderHit(hit);
+        _mover.ColliderHit(hit);
     }
 
     private void OnStartRunning()

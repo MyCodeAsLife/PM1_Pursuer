@@ -6,7 +6,7 @@ public class EnemyMover
 {
     private Transform _target;
     private Transform _transform;
-    private Rigidbody _rig;
+    private Rigidbody _rigitbody;
 
     private float _moveSpeed;
     private float _rotateSpeed;
@@ -15,24 +15,25 @@ public class EnemyMover
 
     public event Action<bool> Moved;
 
-    public EnemyMover(Transform target, Transform transform, Rigidbody rig)
+    public EnemyMover(Transform target, Transform transform, Rigidbody rigitbody)
     {
         _target = target;
         _transform = transform;
-        _rig = rig;
-        _moveSpeed = 3f;
+        _rigitbody = rigitbody;
+        _moveSpeed = 5f;
         _rotateSpeed = 0.3f;
         _approachDistance = 2f;
     }
 
     public void Tick()
     {
-        Moving();
+        Follow();
     }
 
     private void Move()
     {
-        _rig.MovePosition(Vector3.MoveTowards(_transform.position, _target.position, _moveSpeed * Time.deltaTime));
+        Vector3 movement = Vector3.MoveTowards(_transform.position, _target.position, _moveSpeed * Time.deltaTime);
+        _rigitbody.MovePosition(movement);
     }
 
     private void Rotate()
@@ -44,7 +45,7 @@ public class EnemyMover
         _transform.rotation = Quaternion.Lerp(_transform.rotation, rotation, _rotateSpeed);
     }
 
-    private void Moving()
+    private void Follow()
     {
         float distance = Vector3.Distance(_transform.position, _target.position);
 

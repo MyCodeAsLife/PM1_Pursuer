@@ -4,6 +4,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     [SerializeField] private Transform _target;
+    [SerializeField] private Animator _animator;
 
     private EnemyMover _mover;
     private AnimationController _animationController;
@@ -11,11 +12,10 @@ public class Enemy : MonoBehaviour
 
     private void Awake()
     {
-        var rig = GetComponent<Rigidbody>();
-        var animator = GetComponentInChildren<Animator>();
+        var rigidbody = GetComponent<Rigidbody>();
 
-        _mover = new EnemyMover(_target, transform, rig);
-        _animationController = new AnimationController(animator);
+        _mover = new EnemyMover(_target, transform, rigidbody);
+        _animationController = new AnimationController(_animator);
     }
 
     private void OnEnable()
